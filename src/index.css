@@ -1,0 +1,101 @@
+:root {
+  /* Common */
+  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --transition-speed: 1s;
+  /* Slow, calming transition */
+  --transition-fast: 0.3s;
+
+  /* Sunrise Theme (Light) */
+  --bg-color-light: #fff5e6;
+  /* Soft cream/peach */
+  --text-color-light: #4a403a;
+  --card-bg-light: rgba(255, 255, 255, 0.6);
+  --primary-light: #ff9f43;
+  /* Warm sun orange */
+  --accent-light: #48dbfb;
+  /* Morning sky */
+  --shadow-light: 0 8px 32px 0 rgba(255, 159, 67, 0.2);
+
+  /* Sunset Theme (Dark) */
+  --bg-color-dark: #2c0b39;
+  /* Deep purple/indigo */
+  --text-color-dark: #f0e6ff;
+  --card-bg-dark: rgba(44, 11, 57, 0.6);
+  --primary-dark: #ff5252;
+  /* Setting sun red */
+  --accent-dark: #feca57;
+  /* Starry glow */
+  --shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+  /* Default to Light initially */
+  --bg-color: var(--bg-color-light);
+  --text-color: var(--text-color-light);
+  --card-bg: var(--card-bg-light);
+  --primary: var(--primary-light);
+  --accent: var(--accent-light);
+  --shadow: var(--shadow-light);
+}
+
+body.dark-mode {
+  --bg-color: var(--bg-color-dark);
+  --text-color: var(--text-color-dark);
+  --card-bg: var(--card-bg-dark);
+  --primary: var(--primary-dark);
+  --accent: var(--accent-dark);
+  --shadow: var(--shadow-dark);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  /* Subtle gradient overlay handled in App container if needed */
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+  border: none;
+  outline: none;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+}
