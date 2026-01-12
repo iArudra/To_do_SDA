@@ -1,0 +1,191 @@
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    transition: background 1.5s ease;
+}
+
+.background-day {
+    background: var(--sky-gradient-light);
+}
+
+.background-night {
+    background: var(--sky-gradient-dark);
+}
+
+/* --- Celestial Bodies (Sun / Moon) --- */
+.celestial-body {
+    position: absolute;
+    border-radius: 50%;
+    transition: all 1.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.sun {
+    width: 100px;
+    height: 100px;
+    background: var(--sun-color);
+    box-shadow: 0 0 40px rgba(255, 235, 59, 0.6);
+    top: 10%;
+    right: 15%;
+    animation: glow 4s infinite alternate;
+}
+
+.moon {
+    width: 80px;
+    height: 80px;
+    background: transparent;
+    box-shadow: inset -15px 5px 0 0 var(--moon-color);
+    top: 15%;
+    right: 15%;
+    transform: rotate(-20deg);
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 20px rgba(255, 235, 59, 0.4);
+    }
+
+    to {
+        box-shadow: 0 0 60px rgba(255, 235, 59, 0.8);
+    }
+}
+
+/* --- Clouds --- */
+.cloud {
+    position: absolute;
+    background: var(--cloud-color);
+    border-radius: 50px;
+    opacity: 0.8;
+    animation: moveCloud linear infinite;
+}
+
+.cloud::after,
+.cloud::before {
+    content: '';
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+}
+
+.cloud::after {
+    width: 40px;
+    height: 40px;
+    top: -20px;
+    right: 15px;
+}
+
+.cloud::before {
+    width: 50px;
+    height: 50px;
+    top: -30px;
+    left: 15px;
+}
+
+@keyframes moveCloud {
+    from {
+        transform: translateX(-200px);
+    }
+
+    to {
+        transform: translateX(110vw);
+    }
+}
+
+/* --- Hills --- */
+.hill {
+    position: absolute;
+    bottom: 0;
+    width: 150%;
+    height: 30vh;
+    border-radius: 100% 100% 0 0;
+    transition: background-color 1.5s ease;
+}
+
+.hill-1 {
+    left: -20%;
+    bottom: -50px;
+    height: 40vh;
+    z-index: 3;
+}
+
+.hill-2 {
+    right: -20%;
+    bottom: -20px;
+    height: 50vh;
+    z-index: 2;
+}
+
+.hill-3 {
+    left: 20%;
+    bottom: -80px;
+    height: 45vh;
+    z-index: 1;
+}
+
+/* --- Stars --- */
+.star {
+    position: absolute;
+    background: var(--star-color);
+    border-radius: 50%;
+    animation: twinkle linear infinite;
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 0.2;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+/* --- Dandelions --- */
+.dandelion-seed {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--dandelion-head);
+    border-radius: 50%;
+    animation: floatDandelion linear infinite;
+    z-index: 4;
+}
+
+.dandelion-seed::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateX(-50%);
+}
+
+@keyframes floatDandelion {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(100px, -50vh) rotate(360deg);
+        opacity: 0;
+    }
+}

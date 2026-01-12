@@ -5,9 +5,9 @@
   /* Slow, calming transition */
   --transition-fast: 0.3s;
 
-  /* Sunrise Theme (Light) */
-  --bg-color-light: #fff5e6;
-  /* Soft cream/peach */
+  /* Background transparency for animated background */
+  --bg-color-light: transparent;
+  /* Soft cream/peach - MOVED to sky gradient */
   --text-color-light: #4a403a;
   --card-bg-light: rgba(255, 255, 255, 0.6);
   --primary-light: #ff9f43;
@@ -17,8 +17,8 @@
   --shadow-light: 0 8px 32px 0 rgba(255, 159, 67, 0.2);
 
   /* Sunset Theme (Dark) */
-  --bg-color-dark: #2c0b39;
-  /* Deep purple/indigo */
+  --bg-color-dark: transparent;
+  /* Deep purple/indigo - MOVED to sky gradient */
   --text-color-dark: #f0e6ff;
   --card-bg-dark: rgba(44, 11, 57, 0.6);
   --primary-dark: #ff5252;
@@ -34,6 +34,20 @@
   --primary: var(--primary-light);
   --accent: var(--accent-light);
   --shadow: var(--shadow-light);
+
+  /* Background Elements - Light (Day) */
+  --sky-gradient-light: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+  /* Sky blue to light cyan */
+  --hill-1-light: #4CAF50;
+  /* Primary green */
+  --hill-2-light: #81C784;
+  /* Lighter green */
+  --hill-3-light: #388E3C;
+  /* Darker green */
+  --sun-color: #FFEB3B;
+  --cloud-color: #FFFFFF;
+  --dandelion-stem: #558B2F;
+  --dandelion-head: rgba(255, 255, 255, 0.9);
 }
 
 body.dark-mode {
@@ -43,6 +57,18 @@ body.dark-mode {
   --primary: var(--primary-dark);
   --accent: var(--accent-dark);
   --shadow: var(--shadow-dark);
+
+  /* Background Elements - Dark (Night) */
+  --sky-gradient-dark: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+  /* Deep night gradient */
+  --hill-1-dark: #1a1a2e;
+  /* Very dark blue/purple */
+  --hill-2-dark: #16213e;
+  /* Darker navy */
+  --hill-3-dark: #0f3460;
+  /* Deep indigo */
+  --moon-color: #f6f1d5;
+  --star-color: #ffffff;
 }
 
 * {

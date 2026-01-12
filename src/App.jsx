@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import CalendarView from './components/CalendarView'
+import Background from './components/Background'
 import './App.css'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
 
   return (
     <div className={`app-wrapper ${!user ? 'login-mode' : 'home-mode'}`}>
+      <Background theme={theme} />
       {!user ? (
         <div className="login-container">
           <header style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
