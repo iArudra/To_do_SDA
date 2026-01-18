@@ -7,6 +7,10 @@ CORS(app) # Enable CORS for all routes
 
 db = Database()
 
+@app.route('/')
+def home():
+    return jsonify({"status": "Backend is running!"}), 200
+
 @app.route('/api/signup', methods=['POST'])
 def signup():
     data = request.json
