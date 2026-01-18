@@ -3,8 +3,9 @@ import os
 
 class Database:
     def __init__(self):
-        self.users_db = 'backend/users.db'
-        self.tasks_db = 'backend/tasks.db'
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.users_db = os.path.join(base_dir, 'users.db')
+        self.tasks_db = os.path.join(base_dir, 'tasks.db')
         self._init_dbs()
 
     def _get_connection(self, db_name):
