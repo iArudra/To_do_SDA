@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { GoogleLogin } from '@react-oauth/google'
 import { api } from '../api'
-import '../App.css' // Re-use main styles or add specific ones
+import '../App.css'
 
 function Auth({ onLogin }) {
     const [isLogin, setIsLogin] = useState(true)
@@ -32,6 +33,15 @@ function Auth({ onLogin }) {
                 setIsLogin(true)
                 setError('Account created! Please log in.')
             }
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const res = await api.googleLogin(credentialResponse.credential)
+            onLogin(res.user)
         } catch (err) {
             setError(err.message)
         }
@@ -93,6 +103,22 @@ function Auth({ onLogin }) {
                     {isLogin ? 'Login' : 'Sign Up'}
                 </button>
             </form>
+
+            <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ flex: 1, height: '1px', background: '#ddd' }}></div>
+                <span style={{ color: '#888', fontSize: '0.9rem' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: '#ddd' }}></div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Google login failed')}
+                    useOneTap
+                    theme="outline"
+                    shape="pill"
+                />
+            </div>
 
             <p style={{ marginTop: '1rem', color: 'var(--text-color)' }}>
                 {isLogin ? "Don't have an account? " : "Already have an account? "}

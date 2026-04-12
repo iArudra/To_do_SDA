@@ -3,6 +3,7 @@ import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import CalendarView from './components/CalendarView'
 import Background from './components/Background'
+import ThemeStore from './components/ThemeStore'
 import './App.css'
 
 function App() {
@@ -15,18 +16,21 @@ function App() {
     return saved ? JSON.parse(saved) : null
   })
 
+  const [showThemeStore, setShowThemeStore] = useState(false)
+
   // Apply theme
   useEffect(() => {
+    document.body.className = '';
     if (theme === 'dark') {
       document.body.classList.add('dark-mode')
-    } else {
-      document.body.classList.remove('dark-mode')
+    } else if (theme === 'theme-neon') {
+      document.body.classList.add('theme-neon')
     }
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme)
   }
 
   const handleLogin = (userInfo) => {
@@ -45,8 +49,8 @@ function App() {
       {!user ? (
         <div className="login-container">
           <header style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-            <button className="theme-toggle" onClick={toggleTheme}>
-              {theme === 'light' ? '☀️' : '🌙'}
+            <button className="theme-toggle" onClick={() => setShowThemeStore(!showThemeStore)}>
+              🎨 Themes
             </button>
           </header>
           <h1 style={{ marginBottom: '2rem', fontSize: '3rem', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
@@ -60,8 +64,8 @@ function App() {
             <h1>Good {new Date().getHours() < 12 ? 'Morning' : 'Evening'}, {user.name}</h1>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button onClick={handleLogout} className="logout-btn">Logout</button>
-              <button className="theme-toggle" onClick={toggleTheme}>
-                {theme === 'light' ? '☀️' : '🌙'}
+              <button className="theme-toggle" onClick={() => setShowThemeStore(!showThemeStore)}>
+                🎨 Themes
               </button>
             </div>
           </header>
@@ -73,6 +77,12 @@ function App() {
             <div className="card calendar-section">
               <CalendarView user={user} />
             </div>
+            {showThemeStore && (
+              <div className="card theme-store-section" style={{ gridColumn: '1 / -1' }}>
+                <h2 style={{ marginBottom: '1rem' }}>Theme Store</h2>
+                <ThemeStore user={user} currentTheme={theme} onThemeSelect={handleThemeChange} />
+              </div>
+            )}
           </main>
         </div>
       )}

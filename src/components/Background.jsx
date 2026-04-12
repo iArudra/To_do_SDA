@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import './Background.css';
 
 const Background = ({ theme }) => {
-    const isDark = theme === 'dark';
+    const isDark = theme === 'dark' || theme === 'theme-neon';
 
     // Generate random positions for stars
     const stars = useMemo(() => {

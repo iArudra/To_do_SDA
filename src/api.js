@@ -27,6 +27,19 @@ export const api = {
         return res.json();
     },
 
+    async googleLogin(token) {
+        const res = await fetch(`${API_URL}/google-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Google login failed');
+        }
+        return res.json();
+    },
+
     async getTasks(userEmail) {
         const res = await fetch(`${API_URL}/tasks?user=${encodeURIComponent(userEmail)}`);
         if (!res.ok) throw new Error('Failed to fetch tasks');
@@ -58,6 +71,42 @@ export const api = {
             method: 'DELETE'
         });
         if (!res.ok) throw new Error('Failed to delete task');
+        return res.json();
+    },
+
+    async createOrder(data) {
+        const res = await fetch(`${API_URL}/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to create order');
+        return res.json();
+    },
+
+    async verifyPayment(paymentData) {
+        const res = await fetch(`${API_URL}/verify-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(paymentData)
+        });
+        if (!res.ok) throw new Error('Failed to verify payment');
+        return res.json();
+    },
+
+    async getUserPurchases(userEmail) {
+        const res = await fetch(`${API_URL}/user-purchases?user=${encodeURIComponent(userEmail)}`);
+        if (!res.ok) throw new Error('Failed to fetch purchases');
+        return res.json();
+    },
+
+    async mockPurchase(data) {
+        const res = await fetch(`${API_URL}/mock-purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to mock purchase');
         return res.json();
     }
 };

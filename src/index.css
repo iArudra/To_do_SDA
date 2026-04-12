@@ -71,6 +71,32 @@ body.dark-mode {
   --star-color: #ffffff;
 }
 
+body.theme-neon {
+  --bg-color-dark: transparent;
+  --text-color-dark: #e0f7fa;
+  --card-bg-dark: rgba(10, 10, 18, 0.8);
+  --primary-dark: #00f3ff;
+  --accent-dark: #ff00ff;
+  --shadow-dark: 0 8px 32px 0 rgba(0, 243, 255, 0.3);
+
+  --bg-color: var(--bg-color-dark);
+  --text-color: var(--text-color-dark);
+  --card-bg: var(--card-bg-dark);
+  --primary: var(--primary-dark);
+  --accent: var(--accent-dark);
+  --shadow: var(--shadow-dark);
+
+  /* Background Elements - Neon */
+  --sky-gradient-dark: linear-gradient(to bottom, #050505, #12002b, #001f3f);
+  --hill-1-dark: #0a0a12;
+  --hill-2-dark: #12002b;
+  --hill-3-dark: #001f3f;
+  --moon-color: #ff00ff;
+  --star-color: #00f3ff;
+
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

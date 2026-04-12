@@ -21,7 +21,24 @@ class Database:
                     name TEXT NOT NULL,
                     email TEXT UNIQUE NOT NULL,
                     phone TEXT,
-                    password TEXT NOT NULL
+                    password TEXT
+                )
+            ''')
+            conn.commit()
+
+        # Initialize Purchases DB (inside users_db for simplicity)
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS purchases (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT NOT NULL,
+                    item_id TEXT NOT NULL,
+                    amount INTEGER,
+                    razorpay_order_id TEXT,
+                    razorpay_payment_id TEXT,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
             conn.commit()
@@ -64,6 +81,25 @@ class Database:
                 (email, password)
             )
             return cursor.fetchone()
+
+    def get_user_by_email(self, email):
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT name, email, phone FROM users WHERE email = ?', (email,))
+            return cursor.fetchone()
+
+    def create_oauth_user(self, name, email):
+        try:
+            with self._get_connection(self.users_db) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    'INSERT INTO users (name, email) VALUES (?, ?)',
+                    (name, email)
+                )
+                conn.commit()
+                return True
+        except sqlite3.IntegrityError:
+            return False
 
     def add_task(self, user_email, text, category, notes, due_date):
         with self._get_connection(self.tasks_db) as conn:
@@ -113,3 +149,32 @@ class Database:
             cursor = conn.cursor()
             cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
             conn.commit()
+
+    def add_purchase(self, user_email, item_id, amount, order_id):
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                '''INSERT INTO purchases (user_email, item_id, amount, razorpay_order_id, status) 
+                   VALUES (?, ?, ?, ?, 'pending')''',
+                (user_email, item_id, amount, order_id)
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def update_purchase_success(self, order_id, payment_id):
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'UPDATE purchases SET razorpay_payment_id = ?, status = "completed" WHERE razorpay_order_id = ?',
+                (payment_id, order_id)
+            )
+            conn.commit()
+
+    def get_purchased_themes(self, user_email):
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT item_id FROM purchases WHERE user_email = ? AND status = "completed"',
+                (user_email,)
+            )
+            return [row[0] for row in cursor.fetchall()]

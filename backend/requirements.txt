@@ -2,3 +2,6 @@ flask
 flask-cors
 python-dotenv
 gunicorn
+google-auth
+requests
+razorpay
