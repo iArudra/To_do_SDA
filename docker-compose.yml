@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    # Load environment variables from the root .env file
+    env_file:
+      - .env
+    volumes:
+      # Mount the databases specifically so they persist across container restarts
+      - ./backend/tasks.db:/app/tasks.db
+      - ./backend/users.db:/app/users.db
+
+  frontend:
+    build:
+      context: .
+      args:
+        # Assuming frontend is testing against local backend; adjust if deploying to remote
+        - VITE_API_URL=http://localhost:5000/api
+    ports:
+      - "3000:80" # Exposed on 3000 so it doesn't conflict with potential local webservers
+    depends_on:
+      - backend
