@@ -5,3 +5,6 @@ gunicorn
 google-auth
 requests
 razorpay
+pyotp
+cryptography
+qrcode[pil]

@@ -1,11 +1,23 @@
 import sqlite3
 import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from crypto_utils import encrypt_text, decrypt_text
 
 class Database:
     def __init__(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.users_db = os.path.join(base_dir, 'users.db')
-        self.tasks_db = os.path.join(base_dir, 'tasks.db')
+        
+        # In K8s, we mount the volume at /app/data to avoid overwriting code in /app
+        data_dir = os.path.join(base_dir, 'data')
+        if not os.path.exists(data_dir):
+            try:
+                os.makedirs(data_dir, exist_ok=True)
+            except Exception:
+                # Fallback to base_dir if we can't create /app/data
+                data_dir = base_dir
+                
+        self.users_db = os.path.join(data_dir, 'users.db')
+        self.tasks_db = os.path.join(data_dir, 'tasks.db')
         self._init_dbs()
 
     def _get_connection(self, db_name):
@@ -21,9 +33,19 @@ class Database:
                     name TEXT NOT NULL,
                     email TEXT UNIQUE NOT NULL,
                     phone TEXT,
-                    password TEXT
+                    password TEXT,
+                    mfa_secret TEXT,
+                    mfa_enabled BOOLEAN DEFAULT 0
                 )
             ''')
+            
+            # Simple migration for existing DB
+            try:
+                cursor.execute('ALTER TABLE users ADD COLUMN mfa_secret TEXT')
+                cursor.execute('ALTER TABLE users ADD COLUMN mfa_enabled BOOLEAN DEFAULT 0')
+            except sqlite3.OperationalError:
+                pass # Columns already exist
+
             conn.commit()
 
         # Initialize Purchases DB (inside users_db for simplicity)
@@ -62,11 +84,15 @@ class Database:
 
     def create_user(self, name, email, phone, password):
         try:
+            hashed_password = generate_password_hash(password)
+            encrypted_name = encrypt_text(name)
+            encrypted_phone = encrypt_text(phone)
+            
             with self._get_connection(self.users_db) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     'INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)',
-                    (name, email, phone, password)
+                    (encrypted_name, email, encrypted_phone, hashed_password)
                 )
                 conn.commit()
                 return True
@@ -77,24 +103,68 @@ class Database:
         with self._get_connection(self.users_db) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                'SELECT name, email, phone FROM users WHERE email = ? AND password = ?',
-                (email, password)
+                'SELECT name, email, phone, mfa_enabled, mfa_secret, password FROM users WHERE email = ?',
+                (email,)
             )
-            return cursor.fetchone()
+            user = cursor.fetchone()
+            if not user:
+                return None
+            
+            stored_password = user[5]
+            is_valid = False
+            
+            # Check if it's a hash or plain text
+            if stored_password.startswith(('pbkdf2:sha256:', 'scrypt:')):
+                is_valid = check_password_hash(stored_password, password)
+            else:
+                # Legacy plain text password - verify and migrate
+                if stored_password == password:
+                    is_valid = True
+                    # Migrate to hash and encrypt PII immediately
+                    new_hash = generate_password_hash(password)
+                    enc_name = encrypt_text(user[0])
+                    enc_phone = encrypt_text(user[2])
+                    cursor.execute(
+                        'UPDATE users SET password = ?, name = ?, phone = ? WHERE email = ?',
+                        (new_hash, enc_name, enc_phone, email)
+                    )
+                    conn.commit()
+            
+            if is_valid:
+                # Return decrypted data (decrypted above during migration or here)
+                # decryption fallback handles if already encrypted
+                return (
+                    decrypt_text(user[0]), 
+                    user[1], 
+                    decrypt_text(user[2]), 
+                    user[3], 
+                    user[4]
+                )
+            return None
 
     def get_user_by_email(self, email):
         with self._get_connection(self.users_db) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT name, email, phone FROM users WHERE email = ?', (email,))
-            return cursor.fetchone()
+            cursor.execute('SELECT name, email, phone, mfa_enabled, mfa_secret FROM users WHERE email = ?', (email,))
+            user = cursor.fetchone()
+            if user:
+                return (
+                    decrypt_text(user[0]),
+                    user[1],
+                    decrypt_text(user[2]),
+                    user[3],
+                    user[4]
+                )
+            return None
 
     def create_oauth_user(self, name, email):
         try:
+            encrypted_name = encrypt_text(name)
             with self._get_connection(self.users_db) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     'INSERT INTO users (name, email) VALUES (?, ?)',
-                    (name, email)
+                    (encrypted_name, email)
                 )
                 conn.commit()
                 return True
@@ -141,6 +211,15 @@ class Database:
             cursor.execute(
                 'UPDATE tasks SET completed = ? WHERE id = ?',
                 (1 if completed else 0, task_id)
+            )
+            conn.commit()
+
+    def enable_mfa(self, email, secret):
+        with self._get_connection(self.users_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'UPDATE users SET mfa_secret = ?, mfa_enabled = 1 WHERE email = ?',
+                (secret, email)
             )
             conn.commit()
 

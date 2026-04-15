@@ -6,7 +6,9 @@ from google.auth.transport import requests
 import os
 import razorpay
 import traceback
+import pyotp
 from dotenv import load_dotenv
+from crypto_utils import encrypt_text, decrypt_text
 
 load_dotenv()
 
@@ -48,6 +50,38 @@ def login():
     data = request.json
     user = db.verify_user(data.get('email'), data.get('password'))
     if user:
+        mfa_enabled = user[3]
+        if mfa_enabled:
+            return jsonify({
+                "message": "MFA required",
+                "mfa_required": True,
+                "email": user[1] # Temporarily return email to proceed to MFA step
+            }), 200
+            
+        return jsonify({
+            "message": "Login successful",
+            "mfa_required": False,
+            "user": {
+                "name": user[0],
+                "email": user[1],
+                "phone": user[2]
+            }
+        }), 200
+    return jsonify({"error": "Invalid credentials"}), 401
+
+@app.route('/api/login/mfa', methods=['POST'])
+def login_mfa():
+    data = request.json
+    email = data.get('email')
+    token = data.get('token')
+    
+    user = db.get_user_by_email(email)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+        
+    mfa_secret = user[4]
+    totp = pyotp.TOTP(mfa_secret)
+    if totp.verify(token):
         return jsonify({
             "message": "Login successful",
             "user": {
@@ -56,7 +90,8 @@ def login():
                 "phone": user[2]
             }
         }), 200
-    return jsonify({"error": "Invalid credentials"}), 401
+        
+    return jsonify({"error": "Invalid MFA token"}), 401
 
 @app.route('/api/google-login', methods=['POST'])
 def google_login():
@@ -94,15 +129,23 @@ def tasks():
         if not user_email:
             return jsonify({"error": "User email required"}), 400
         tasks = db.get_tasks(user_email)
+        # Decrypt text and notes
+        for task in tasks:
+            task['text'] = decrypt_text(task['text'])
+            task['notes'] = decrypt_text(task['notes'])
         return jsonify(tasks), 200
     
     if request.method == 'POST':
         data = request.json
+        # Encrypt text and notes before saving
+        encrypted_text = encrypt_text(data.get('text', ''))
+        encrypted_notes = encrypt_text(data.get('notes', ''))
+        
         task_id = db.add_task(
             data.get('user'),
-            data.get('text'),
+            encrypted_text,
             data.get('category'),
-            data.get('notes'),
+            encrypted_notes,
             data.get('due_date')
         )
         return jsonify({"id": task_id, "message": "Task created"}), 201
@@ -169,6 +212,37 @@ def user_purchases():
         return jsonify({"error": "User required"}), 400
     themes = db.get_purchased_themes(user_email)
     return jsonify({"themes": themes}), 200
+
+@app.route('/api/mfa/setup', methods=['POST'])
+def setup_mfa():
+    data = request.json
+    email = data.get('email')
+    
+    # Generate a random base32 string for the secret
+    secret = pyotp.random_base32()
+    # Provide an issuer name for the Authenticator app
+    totp = pyotp.TOTP(secret)
+    provisioning_uri = totp.provisioning_uri(name=email, issuer_name="TodoAppSDA")
+    
+    return jsonify({
+        "secret": secret,
+        "uri": provisioning_uri
+    }), 200
+
+@app.route('/api/mfa/verify', methods=['POST'])
+def verify_mfa():
+    data = request.json
+    email = data.get('email')
+    secret = data.get('secret')
+    token = data.get('token')
+    
+    totp = pyotp.TOTP(secret)
+    if totp.verify(token):
+        # Save to DB
+        db.enable_mfa(email, secret)
+        return jsonify({"message": "MFA enabled successfully"}), 200
+        
+    return jsonify({"error": "Invalid token"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
