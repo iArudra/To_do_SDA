@@ -5,6 +5,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
 import razorpay
+import traceback
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,6 +19,12 @@ RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 db = Database()
+
+# Debug: Check if keys are loaded
+print(f"--- Razorpay Config ---")
+print(f"Key ID: {RAZORPAY_KEY_ID[:8] if RAZORPAY_KEY_ID else 'MISSING'}...")
+print(f"Key Secret: {'SET' if RAZORPAY_KEY_SECRET else 'MISSING'}")
+print(f"-----------------------")
 
 @app.route('/')
 def home():
@@ -125,7 +132,7 @@ def create_order():
     order_data = {
         "amount": amount,
         "currency": "INR",
-        "receipt": f"receipt_{user_email}_{item_id}",
+        "receipt": f"r_{item_id[:10]}_{os.urandom(4).hex()}", # Limit 40 chars
         "payment_capture": 1
     }
     
@@ -134,7 +141,9 @@ def create_order():
         db.add_purchase(user_email, item_id, amount, razorpay_order['id'])
         return jsonify(razorpay_order), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"ERROR creating order: {str(e)}")
+        traceback.print_exc() # This will print the full error to your terminal!
+        return jsonify({"error": f"Razorpay error: {str(e)}"}), 500
 
 @app.route('/api/verify-payment', methods=['POST'])
 def verify_payment():
@@ -160,20 +169,6 @@ def user_purchases():
         return jsonify({"error": "User required"}), 400
     themes = db.get_purchased_themes(user_email)
     return jsonify({"themes": themes}), 200
-
-@app.route('/api/mock-purchase', methods=['POST'])
-def mock_purchase():
-    data = request.json
-    user_email = data.get('email')
-    item_id = data.get('itemId')
-    amount = data.get('amount')
-    
-    if not all([user_email, item_id, amount]):
-        return jsonify({"error": "Missing parameters"}), 400
-        
-    db.add_purchase(user_email, item_id, amount, 'mock_order_123')
-    db.update_purchase_success('mock_order_123', 'mock_payment_456')
-    return jsonify({"status": "Payment simulated and theme unlocked"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

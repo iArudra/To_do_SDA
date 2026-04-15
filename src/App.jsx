@@ -33,6 +33,10 @@ function App() {
     setTheme(newTheme)
   }
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }
+
   const handleLogin = (userInfo) => {
     setUser(userInfo)
     localStorage.setItem('user', JSON.stringify(userInfo))
@@ -48,9 +52,12 @@ function App() {
       <Background theme={theme} />
       {!user ? (
         <div className="login-container">
-          <header style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+          <header style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.5rem' }}>
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === 'light' ? '☀️' : '🌙'}
+            </button>
             <button className="theme-toggle" onClick={() => setShowThemeStore(!showThemeStore)}>
-              🎨 Themes
+              🎨
             </button>
           </header>
           <h1 style={{ marginBottom: '2rem', fontSize: '3rem', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
@@ -64,8 +71,11 @@ function App() {
             <h1>Good {new Date().getHours() < 12 ? 'Morning' : 'Evening'}, {user.name}</h1>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button onClick={handleLogout} className="logout-btn">Logout</button>
+              <button className="theme-toggle" onClick={toggleTheme}>
+                {theme === 'light' ? '☀️' : '🌙'}
+              </button>
               <button className="theme-toggle" onClick={() => setShowThemeStore(!showThemeStore)}>
-                🎨 Themes
+                🎨
               </button>
             </div>
           </header>
@@ -78,9 +88,14 @@ function App() {
               <CalendarView user={user} />
             </div>
             {showThemeStore && (
-              <div className="card theme-store-section" style={{ gridColumn: '1 / -1' }}>
-                <h2 style={{ marginBottom: '1rem' }}>Theme Store</h2>
-                <ThemeStore user={user} currentTheme={theme} onThemeSelect={handleThemeChange} />
+              <div className="theme-store-overlay" onClick={() => setShowThemeStore(false)}>
+                <div className="theme-store-modal" onClick={e => e.stopPropagation()}>
+                  <div className="theme-store-header">
+                    <h2>Customize Theme</h2>
+                    <button className="close-store" onClick={() => setShowThemeStore(false)}>&times;</button>
+                  </div>
+                  <ThemeStore user={user} currentTheme={theme} onThemeSelect={handleThemeChange} />
+                </div>
               </div>
             )}
           </main>

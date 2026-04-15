@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import MockPaymentGateway from './MockPaymentGateway';
 
 const themes = [
     {
@@ -30,8 +29,6 @@ const themes = [
 const ThemeStore = ({ user, currentTheme, onThemeSelect }) => {
     const [purchasedThemes, setPurchasedThemes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [showGateway, setShowGateway] = useState(false);
-    const [selectedTheme, setSelectedTheme] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -48,36 +45,60 @@ const ThemeStore = ({ user, currentTheme, onThemeSelect }) => {
         }
     };
 
-    const handleBuy = (theme) => {
-        setSelectedTheme(theme);
-        setShowGateway(true);
-    };
-
-    const handlePaymentSuccess = async () => {
-        setShowGateway(false);
+    const handleBuy = async (theme) => {
         setLoading(true);
         try {
-            await api.mockPurchase({
+            // 1. Create order on backend
+            const orderRes = await api.createOrder({
                 email: user.email,
-                itemId: selectedTheme.id,
-                amount: selectedTheme.price * 100
+                itemId: theme.id,
+                amount: theme.price * 100 // Convert ₹ to paise
             });
-            
-            alert("Theme Unlocked Successfully!");
-            await fetchPurchases();
-            onThemeSelect(selectedTheme.id);
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID || '', // Needs to be in .env
+                amount: orderRes.amount,
+                currency: orderRes.currency,
+                name: "Todo Master",
+                description: `Unlock ${theme.name} Theme`,
+                order_id: orderRes.id,
+                handler: async function (response) {
+                    try {
+                        // 3. Verify Payment on backend
+                        await api.verifyPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        alert("Theme Unlocked Successfully!");
+                        await fetchPurchases();
+                        onThemeSelect(theme.id);
+                    } catch (err) {
+                        alert("Payment verification failed.");
+                    }
+                },
+                prefill: {
+                    name: user.name,
+                    email: user.email,
+                },
+                theme: {
+                    color: theme.color
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response){
+                alert("Payment failed.");
+            });
+            rzp.open();
+
         } catch (error) {
             console.error(error);
-            alert("Error logging purchase locally.");
+            alert("Error initiating purchase");
         } finally {
             setLoading(false);
-            setSelectedTheme(null);
         }
-    };
-
-    const handlePaymentCancel = () => {
-        setShowGateway(false);
-        setSelectedTheme(null);
     };
 
     return (
@@ -138,15 +159,6 @@ const ThemeStore = ({ user, currentTheme, onThemeSelect }) => {
                     </div>
                 );
             })}
-
-            {showGateway && selectedTheme && (
-                <MockPaymentGateway
-                    amount={selectedTheme.price}
-                    itemName={selectedTheme.name}
-                    onSuccess={handlePaymentSuccess}
-                    onCancel={handlePaymentCancel}
-                />
-            )}
         </div>
     );
 };

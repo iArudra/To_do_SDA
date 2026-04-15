@@ -98,15 +98,5 @@ export const api = {
         const res = await fetch(`${API_URL}/user-purchases?user=${encodeURIComponent(userEmail)}`);
         if (!res.ok) throw new Error('Failed to fetch purchases');
         return res.json();
-    },
-
-    async mockPurchase(data) {
-        const res = await fetch(`${API_URL}/mock-purchase`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('Failed to mock purchase');
-        return res.json();
     }
 };
