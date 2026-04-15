@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  labels:
+    app: todo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+    spec:
+      containers:
+      - name: backend
+        image: todo-backend:latest
+        imagePullPolicy: Never # Good for local testing with minikube/docker-desktop
+        ports:
+        - containerPort: 5000
+        env:
+        # Note: In a real production setup, these should come from a K8s Secret!
+        - name: VITE_GOOGLE_CLIENT_ID
+          value: "300092878477-c7rananqftnvlq9nr7c7kfdgb414h0ln.apps.googleusercontent.com"
+        - name: RAZORPAY_KEY_ID
+          value: "rzp_test_SdgpDKZa0wCurA"
+        - name: RAZORPAY_KEY_SECRET
+          value: "PttZYxyn3BMTHYFvL8kyT3os"
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app
+      volumes:
+      - name: sqlite-data
+        persistentVolumeClaim:
+          claimName: sqlite-pvc
