@@ -9,9 +9,14 @@ RUN npm install
 # Copy application source code
 COPY . .
 
-# Accept backend API URL as an argument
+# Accept environment variables as arguments
 ARG VITE_API_URL
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_RAZORPAY_KEY_ID
+
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_RAZORPAY_KEY_ID=$VITE_RAZORPAY_KEY_ID
 
 # Build the frontend
 RUN npm run build

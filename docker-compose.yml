@@ -18,8 +18,9 @@ services:
     build:
       context: .
       args:
-        # Assuming frontend is testing against local backend; adjust if deploying to remote
-        - VITE_API_URL=http://localhost:5000/api
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api}
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+        - VITE_RAZORPAY_KEY_ID=${VITE_RAZORPAY_KEY_ID}
     ports:
       - "3000:80" # Exposed on 3000 so it doesn't conflict with potential local webservers
     depends_on:
