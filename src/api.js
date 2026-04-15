@@ -40,6 +40,42 @@ export const api = {
         return res.json();
     },
 
+    async loginMfa(email, token) {
+        const res = await fetch(`${API_URL}/login/mfa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, token })
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'MFA validation failed');
+        }
+        return res.json();
+    },
+
+    async setupMfa(email) {
+        const res = await fetch(`${API_URL}/mfa/setup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        if (!res.ok) throw new Error('Failed to setup MFA');
+        return res.json();
+    },
+
+    async verifyMfa(email, secret, token) {
+        const res = await fetch(`${API_URL}/mfa/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, secret, token })
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to verify MFA');
+        }
+        return res.json();
+    },
+
     async getTasks(userEmail) {
         const res = await fetch(`${API_URL}/tasks?user=${encodeURIComponent(userEmail)}`);
         if (!res.ok) throw new Error('Failed to fetch tasks');

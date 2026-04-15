@@ -4,6 +4,7 @@ import TodoList from './components/TodoList'
 import CalendarView from './components/CalendarView'
 import Background from './components/Background'
 import ThemeStore from './components/ThemeStore'
+import MfaSetup from './components/MfaSetup'
 import './App.css'
 
 function App() {
@@ -91,10 +92,14 @@ function App() {
               <div className="theme-store-overlay" onClick={() => setShowThemeStore(false)}>
                 <div className="theme-store-modal" onClick={e => e.stopPropagation()}>
                   <div className="theme-store-header">
-                    <h2>Customize Theme</h2>
+                    <h2>Settings & Customization</h2>
                     <button className="close-store" onClick={() => setShowThemeStore(false)}>&times;</button>
                   </div>
-                  <ThemeStore user={user} currentTheme={theme} onThemeSelect={handleThemeChange} />
+                  <div style={{ maxHeight: '80vh', overflowY: 'auto', padding: '1rem' }}>
+                    <ThemeStore user={user} currentTheme={theme} onThemeSelect={handleThemeChange} />
+                    <hr style={{ margin: '2rem 0', borderColor: 'var(--border)' }} />
+                    <MfaSetup user={user} />
+                  </div>
                 </div>
               </div>
             )}

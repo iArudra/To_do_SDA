@@ -30,7 +30,7 @@ spec:
           value: "PttZYxyn3BMTHYFvL8kyT3os"
         volumeMounts:
         - name: sqlite-data
-          mountPath: /app
+          mountPath: /app/data
       volumes:
       - name: sqlite-data
         persistentVolumeClaim:
