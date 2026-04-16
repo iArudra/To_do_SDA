@@ -10,9 +10,8 @@ services:
     env_file:
       - .env
     volumes:
-      # Mount the databases specifically so they persist across container restarts
-      - ./backend/tasks.db:/app/data/tasks.db
-      - ./backend/users.db:/app/data/users.db
+      # Mount the entire data directory for persistence
+      - ./backend/data:/app/data
 
   frontend:
     build:
@@ -22,6 +21,6 @@ services:
         - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
         - VITE_RAZORPAY_KEY_ID=${VITE_RAZORPAY_KEY_ID}
     ports:
-      - "3000:80" # Exposed on 3000 so it doesn't conflict with potential local webservers
+      - "80:80" # Exposed on port 80 for default web access
     depends_on:
       - backend
