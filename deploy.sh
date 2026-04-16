@@ -9,9 +9,9 @@ DOMAIN="$PUBLIC_IP.nip.io"
 
 echo "Detected Domain: $DOMAIN"
 
-# 3. Export variables from .env so docker-compose can see them
+# 3. Load environment variables correctly (ignoring comments)
 if [ -f .env ]; then
-    export $(cat .env | xargs)
+    export $(grep -v '^#' .env | xargs)
 fi
 
 # 4. Specifically override the VITE_API_URL to use the new domain
