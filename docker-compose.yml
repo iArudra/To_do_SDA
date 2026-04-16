@@ -9,9 +9,7 @@ services:
     # Load environment variables from the root .env file
     env_file:
       - .env
-    volumes:
-      # Mount the entire data directory for persistence
-      - ./backend/data:/app/data
+    # No volume mount needed — database is on AWS RDS
 
   frontend:
     build:
