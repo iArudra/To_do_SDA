@@ -28,6 +28,10 @@ spec:
           value: "rzp_test_SdgpDKZa0wCurA"
         - name: RAZORPAY_KEY_SECRET
           value: "PttZYxyn3BMTHYFvL8kyT3os"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
         volumeMounts:
         - name: sqlite-data
           mountPath: /app/data
