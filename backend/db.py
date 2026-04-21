@@ -276,3 +276,14 @@ class Database:
                 return [row['item_id'] for row in cur.fetchall()]
         finally:
             conn.close()
+
+    def get_task_owner(self, task_id):
+        """Retrieve the email of the user who owns the given task ID."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute('SELECT user_email FROM tasks WHERE id = %s', (task_id,))
+                row = cur.fetchone()
+                return row['user_email'] if row else None
+        finally:
+            conn.close()

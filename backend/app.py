@@ -9,6 +9,7 @@ import traceback
 import pyotp
 from dotenv import load_dotenv
 from crypto_utils import encrypt_text, decrypt_text
+from cache import Cache
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 db = Database()
+cache = Cache()
 
 # Debug: Check if keys are loaded
 print(f"--- Razorpay Config ---")
@@ -128,38 +130,61 @@ def tasks():
     if request.method == 'GET':
         if not user_email:
             return jsonify({"error": "User email required"}), 400
+        
+        # Try fetching from cache
+        cached_tasks = cache.get_json(f"tasks:{user_email}")
+        if cached_tasks:
+            print(f"[*] Serving tasks for {user_email} from CACHE")
+            return jsonify(cached_tasks), 200
+
         tasks = db.get_tasks(user_email)
         # Decrypt text and notes
         for task in tasks:
             task['text'] = decrypt_text(task['text'])
             task['notes'] = decrypt_text(task['notes'])
+        
+        # Store in cache (5 minutes)
+        cache.set_json(f"tasks:{user_email}", tasks, ex=300)
+        print(f"[*] Fetched tasks for {user_email} from DB and CACHED")
         return jsonify(tasks), 200
     
     if request.method == 'POST':
         data = request.json
         # Encrypt text and notes before saving
+        user_email_body = data.get('user')
         encrypted_text = encrypt_text(data.get('text', ''))
         encrypted_notes = encrypt_text(data.get('notes', ''))
         
         task_id = db.add_task(
-            data.get('user'),
+            user_email_body,
             encrypted_text,
             data.get('category'),
             encrypted_notes,
             data.get('due_date')
         )
+        
+        # Invalidate cache
+        cache.invalidate_user_tasks(user_email_body)
         return jsonify({"id": task_id, "message": "Task created"}), 201
 
 @app.route('/api/tasks/<int:task_id>', methods=['DELETE', 'PUT'])
 def task_operations(task_id):
+    # Get owner to invalidate cache
+    user_email = db.get_task_owner(task_id)
+    
     if request.method == 'DELETE':
         db.delete_task(task_id)
+        if user_email:
+            cache.invalidate_user_tasks(user_email)
         return jsonify({"message": "Task deleted"}), 200
     
     if request.method == 'PUT':
         data = request.json
         if 'completed' in data:
             db.update_task_status(task_id, data['completed'])
+        
+        if user_email:
+            cache.invalidate_user_tasks(user_email)
         return jsonify({"message": "Task updated"}), 200
 
 @app.route('/api/create-order', methods=['POST'])

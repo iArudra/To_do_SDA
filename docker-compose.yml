@@ -9,7 +9,16 @@ services:
     # Load environment variables from the root .env file
     env_file:
       - .env
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
     # No volume mount needed — database is on AWS RDS
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
 
   frontend:
     build:
