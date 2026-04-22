@@ -9,6 +9,7 @@ import traceback
 import pyotp
 from dotenv import load_dotenv
 from crypto_utils import encrypt_text, decrypt_text
+from cache import Cache
 
 load_dotenv()
 
@@ -20,14 +21,27 @@ RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
 client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
 db = Database()
+cache = Cache()
 
 # Debug: Check if keys are loaded
 print(f"--- Razorpay Config ---")
 print(f"Key ID: {RAZORPAY_KEY_ID[:8] if RAZORPAY_KEY_ID else 'MISSING'}...")
 print(f"Key Secret: {'SET' if RAZORPAY_KEY_SECRET else 'MISSING'}")
 print(f"-----------------------")
-
+# Redis health check endpoint (must be after app and cache are defined)
+@app.route('/api/redis-health')
+def redis_health():
+    try:
+        pong = cache.client.ping()
+        if pong:
+            return jsonify({"redis": "connected"}), 200
+        else:
+            return jsonify({"redis": "not connected"}), 500
+    except Exception as e:
+        return jsonify({"redis": "error", "details": str(e)}), 500
+    
 @app.route('/')
 def home():
     return jsonify({"status": "Backend is running!"}), 200
